@@ -1,181 +1,92 @@
-import { useFormik } from "formik";
-import React, { useContext, useState } from "react";
-import * as Yup from "yup";
-import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
-import { authContext } from "../Contexts/AuthContext";
+import React, { useContext, useState } from 'react'
+import { useFormik } from 'formik'
+import * as Yup from 'yup'
+import axios from 'axios'
+import { useNavigate, Link } from 'react-router-dom'
+import { authContext } from '../Contexts/AuthContext'
+const validationSchema = Yup.object({
 
+  email: Yup.string().required("required field").matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/i, "pleas writ the correct email address"),
+  password: Yup.string().required("required field").matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/i, "Minimum eight characters, at least one letter, one number and one special character:"),
+})
+const initialValues = {
+  email: '',
+  password: '',
+}
 export default function Login() {
-  const { userIsLoggedIn, setUserIsLoggedIn } = useContext(authContext);
-  // console.log(userIsLoggedIn)
-  const [errorMsg, setErrorMsg] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const navigateToLogin = useNavigate();
 
-  const validationSchema = Yup.object({
-    email: Yup.string()
-      .required("Email is required")
-      .matches(
-        /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-        "Enter valid Email"
-      ),
-    password: Yup.string()
-      .required("Password is required")
-      .matches(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-        "Minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character"
-      ),
-  });
+  const { userIsLoggedIn, setUserIsLoggedIn } = useContext(authContext)
 
-  // function validate(values) {
-  //   const errors = {};
 
-  //   if (values.name === "") {
-  //     errors.name = "Name is required";
-  //   } else if (values.name.length < 3) {
-  //     errors.name = "Name must be more than 3 charcters";
-  //   } else if (values.name.length > 20) {
-  //     errors.name = "Name must be less than 20 charcters";
-  //   }
 
-  //   if (values.email === "") {
-  //     errors.email = "Email is required";
-  //   } else if (
-  //     !/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
-  //       values.email
-  //     )
-  //   ) {
-  //     errors.email = "Enter valid Email";
-  //   }
-
-  //   if (values.password === "") {
-  //     errors.password = "Password is required";
-  //   } else if (
-  //     !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
-  //       values.password
-  //     )
-  //   ) {
-  //     errors.password =
-  //       "Minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character";
-  //   }
-
-  //   if (values.rePassword === "") {
-  //     errors.rePassword = "Repassword is requird";
-  //   } else if (values.rePassword !== values.password) {
-  //     errors.rePassword = "Password and repassword doesn't match";
-  //   }
-
-  //   if (values.phone === "") {
-  //     errors.phone = "Phone number is requird";
-  //   }
-
-  //   console.log(errors);
-  //   return errors;
-  // }
-
-  const {
-    values,
-    handleSubmit,
-    handleChange,
-    errors,
-    touched,
-    handleBlur,
-    isValid,
-  } = useFormik({
-    initialValues: {
-      email: "",
-      password: "",
-    },
+  const [err, seterr] = useState('')
+  const [isload, setload] = useState(false)
+  const navigate = useNavigate('')
+  const { handleChange, values, handleSubmit, errors, handleBlur, touched, isValid } = useFormik({
+    initialValues,
     onSubmit: async () => {
-      setErrorMsg("");
-
+      seterr('')
+      setload(true)
       try {
-        let { data } = await axios.post(
-          "https://ecommerce.routemisr.com/api/v1/auth/signin",
-          values
-        );
+        let { data } = await axios.post('https://ecommerce.routemisr.com/api/v1/auth/signin', values)
+
+        // eslint-disable-next-line eqeqeq
         if (data.message == "success") {
-          setUserIsLoggedIn(true);
-          localStorage.setItem("token", data.token);
-          if (window.location.pathname == "/login") {
-            navigateToLogin("/home");
+          setUserIsLoggedIn(true)
+          localStorage.setItem('token', data.token)
+
+          if (window.location.pathname == '/login') {
+            navigate('/home')
           } else {
-            navigateToLogin(window.location.pathname);
+            navigate(window.location.pathname)
           }
+
+
+
+
         }
-        console.log(data);
+
+
       } catch (error) {
-        setErrorMsg(error.response.data.message);
+        seterr(error.response.data.message)
       }
-      setIsLoading(false);
+      setload(false)
     },
-    validationSchema,
-  });
+    validationSchema
+  })
+
+
   return (
-    <form onSubmit={handleSubmit} className="mt-5">
-      <h3>Login</h3>
+    <>
 
-      <div className="mb-3">
-        <label htmlFor="email">Email</label>
-        <input
-          type="email"
-          className="form-control"
-          placeholder="Enter email"
-          value={values.email}
-          onChange={handleChange}
-          id="email"
-          onBlur={handleBlur}
-        />
-        {errors.email && touched.email && (
-          <p className="alert alert-danger">{errors.email}</p>
-        )}
-      </div>
-      <div className="mb-3">
-        <label htmlFor="password">Password</label>
-        <input
-          type="password"
-          className="form-control"
-          placeholder="Enter password"
-          value={values.password}
-          onChange={handleChange}
-          id="password"
-          onBlur={handleBlur}
-        />
-        {errors.password && touched.password && (
-          <p className="alert alert-danger">{errors.password}</p>
-        )}
+
+      <div className="col-md-4 m-auto shadow-lg p-5">
+        <form onSubmit={handleSubmit}>
+
+          <label htmlFor="email" className="form-label mt-2">Email</label>
+          <input type="email" className="form-control " onBlur={handleBlur} onChange={handleChange} value={values.email} id="email" name="email" />
+          {errors.email && touched.email && <p className="alert alert-warning my-2">{errors.email}</p>}
+
+          <label htmlFor="pass-1" className="form-label mt-2">Password</label>
+          <input type="password" className="form-control " onBlur={handleBlur} onChange={handleChange} value={values.password} id="pass-1" name="password" />
+          {errors.password && touched.password && <p className="alert alert-warning my-2">{errors.password}</p>}
+          <Link to={'/passwordReset'}><p className='text-main'>FogetPassword</p></Link>
+          {isload ? <button type="submit" disabled="" className="btn bg-main text-white ms-auto my-2 px-4 d-block"><i className="px-2 fa-solid fa-spinner fa-spin"></i></button>
+            :
+            <button type="submit" disabled={!isValid || isload} className="btn btn-outline-success ms-auto my-2 d-block">LOGIN</button>
+
+          }
+
+          {err && <div className="alert alert-danger">{err}</div>}
+
+
+
+
+
+        </form>
       </div>
 
-      {errorMsg && <div className="alert alert-danger">{errorMsg}</div>}
 
-      <div className="d-grid">
-        {isLoading ? (
-          <button
-            disabled
-            type="button"
-            className="btn px-4 text-primary signup-btn"
-          >
-            <i class="fa-solid fa-sync fa-spin"></i>
-          </button>
-        ) : (
-          <button
-            disabled={!isValid || isLoading}
-            type="submit"
-            className="btn btn-primary signup-btn mb-3 "
-          >
-            Login
-          </button>
-        )}
-      </div>
-      <Link to={"/passwordReset"} className="text-danger fw-bold ">
-        Forgot Password
-      </Link>
-      <p className="forgot-password text-right mt-2 ">
-        
-        <Link to={"/register"} className="btn btn-primary text-white ">
-          Sign Up
-        </Link>
-      </p>
-    </form>
-  );
+    </>
+  )
 }
