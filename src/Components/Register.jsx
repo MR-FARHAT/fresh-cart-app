@@ -49,7 +49,7 @@ export default function Register() {
   });
 
   return (
-    <div className="col-md-4 m-auto shadow-lg p-5 my-5">
+    <div className="col-11 col-sm-8 col-md-6 col-lg-4 m-auto shadow-lg p-4 my-5">
       <form onSubmit={handleSubmit}>
         {fields.map(({ name, label, type }) => (
           <div key={name}>

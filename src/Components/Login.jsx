@@ -4,6 +4,7 @@ import * as Yup from "yup";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api, getErrorMessage } from "../api";
 import { authContext } from "../Contexts/AuthContext";
+import DemoAccount from "./DemoAccount";
 
 const validationSchema = Yup.object({
   email: Yup.string().required("Email is required").email("Please enter a valid email address"),
@@ -39,7 +40,7 @@ export default function Login() {
   });
 
   return (
-    <div className="col-md-4 m-auto shadow-lg p-5 my-5">
+    <div className="col-11 col-sm-8 col-md-6 col-lg-4 m-auto shadow-lg p-4 my-5">
       <form onSubmit={handleSubmit}>
         <label htmlFor="email" className="form-label mt-2">Email</label>
         <input type="email" className="form-control" onBlur={handleBlur} onChange={handleChange} value={values.email} id="email" name="email" />
@@ -48,6 +49,8 @@ export default function Login() {
         <label htmlFor="password" className="form-label mt-2">Password</label>
         <input type="password" className="form-control" onBlur={handleBlur} onChange={handleChange} value={values.password} id="password" name="password" />
         {errors.password && touched.password && <p className="alert alert-warning my-2">{errors.password}</p>}
+
+        <DemoAccount />
 
         <Link to="/passwordReset" className="d-inline-block text-main mt-2">Forgot password?</Link>
 
