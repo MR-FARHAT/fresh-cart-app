@@ -31,7 +31,7 @@ export default function Address() {
         const { data } = await api.post(
           `/orders/checkout-session/${cartId}`,
           { shippingAddress },
-          { params: { url: window.location.origin } }
+          { params: { url: `${window.location.origin}${process.env.PUBLIC_URL}` } }
         );
         window.location.href = data.session.url;
       } catch (error) {

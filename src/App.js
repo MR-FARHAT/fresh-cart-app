@@ -28,30 +28,33 @@ const queryClient = new QueryClient();
 
 const protect = (element) => <ProtectedRoute>{element}</ProtectedRoute>;
 
-const router = createBrowserRouter([
-  {
-    path: "",
-    element: <Layout />,
-    children: [
-      { index: true, element: <Navigate to="home" replace /> },
-      { path: "home", element: protect(<Home />) },
-      { path: "allProducts", element: protect(<AllProducts />) },
-      { path: "categories", element: protect(<AllCategories />) },
-      { path: "brands", element: protect(<Brands />) },
-      { path: "productDetails/:id", element: protect(<ProductDetails />) },
-      { path: "cart", element: protect(<Cart />) },
-      { path: "address/:cartId", element: protect(<Address />) },
-      { path: "allOrders", element: protect(<Orders />) },
-      { path: "wishlist", element: protect(<WishList />) },
-      { path: "login", element: <Login /> },
-      { path: "register", element: <Register /> },
-      { path: "passwordReset", element: <ForgotPassword /> },
-      { path: "verifyCode", element: <VerifyCode /> },
-      { path: "resetPassword", element: <ResetPassword /> },
-      { path: "*", element: <PageNotFound /> },
-    ],
-  },
-]);
+const router = createBrowserRouter(
+  [
+    {
+      path: "",
+      element: <Layout />,
+      children: [
+        { index: true, element: <Navigate to="home" replace /> },
+        { path: "home", element: protect(<Home />) },
+        { path: "allProducts", element: protect(<AllProducts />) },
+        { path: "categories", element: protect(<AllCategories />) },
+        { path: "brands", element: protect(<Brands />) },
+        { path: "productDetails/:id", element: protect(<ProductDetails />) },
+        { path: "cart", element: protect(<Cart />) },
+        { path: "address/:cartId", element: protect(<Address />) },
+        { path: "allOrders", element: protect(<Orders />) },
+        { path: "wishlist", element: protect(<WishList />) },
+        { path: "login", element: <Login /> },
+        { path: "register", element: <Register /> },
+        { path: "passwordReset", element: <ForgotPassword /> },
+        { path: "verifyCode", element: <VerifyCode /> },
+        { path: "resetPassword", element: <ResetPassword /> },
+        { path: "*", element: <PageNotFound /> },
+      ],
+    },
+  ],
+  { basename: process.env.PUBLIC_URL },
+);
 
 export default function App() {
   return (
