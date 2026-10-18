@@ -1,153 +1,69 @@
-import {
-  Navigate,
-  RouterProvider,
-  createBrowserRouter,
-} from "react-router-dom";
+import { Navigate, RouterProvider, createBrowserRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "react-query";
+import { Provider } from "react-redux";
+import { ToastContainer } from "react-toastify";
 import "./App.css";
+import { store } from "./Redux/store";
+import AuthContextProvider from "./Contexts/AuthContext";
+import CartContextProvider from "./Contexts/CartContext";
 import Layout from "./Components/Layout";
+import ProtectedRoute from "./Components/ProtectedRoute";
 import Home from "./Components/Home";
 import Brands from "./Components/Brands";
 import Cart from "./Components/Cart";
-import Products from "./Components/Products";
-import PageNotFound from "./Components/PageNotFound";
-import Login from "./Components/Login";
-import Register from "./Components/Register";
-import AuthContextProvider from "./Contexts/AuthContext";
-import ProtectedRoute from "./Components/ProtectedRoute";
+import AllProducts from "./Components/AllProducts";
+import AllCategories from "./Components/AllCategories";
 import ProductDetails from "./Components/ProductDetails";
-import { ToastContainer } from "react-toastify";
 import Address from "./Components/Address";
 import Orders from "./Components/Orders";
-import AllCategories from "./Components/AllCategories";
+import WishList from "./Components/WishList";
+import Login from "./Components/Login";
+import Register from "./Components/Register";
 import ForgotPassword from "./Components/ForgotPassword";
 import VerifyCode from "./Components/VerifyCode";
 import ResetPassword from "./Components/ResetPassword";
-import AllProducts from "./Components/AllProducts";
-import WishList from "./Components/WishList";
-// import SpecificCategory from "./Components/SpecificCategory";
+import PageNotFound from "./Components/PageNotFound";
 
-import { QueryClient, QueryClientProvider } from "react-query";
-import { Provider } from "react-redux";
-import { store } from "./Redux/store";
-import CartContextProvider from "./Contexts/CartContext";
+const queryClient = new QueryClient();
 
-function App() {
-  const queryClient = new QueryClient();
-  const routes = createBrowserRouter([
-    {
-      path: "",
-      element: <Layout />,
-      children: [
-        { path: "", element: <Navigate to={"home"} /> },
-        {
-          path: "home",
-          element: (
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: "brands",
-          element: (
-            <ProtectedRoute>
-              <Brands />
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: "cart",
-          element: (
-            <ProtectedRoute>
-              <Cart />
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: "allProducts",
-          element: (
-            <ProtectedRoute>
-              <AllProducts />
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: "products",
-          element: (
-            <ProtectedRoute>
-              <Products />
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: "address/:cartId",
-          element: (
-            <ProtectedRoute>
-              {" "}
-              <Address />{" "}
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: "categories",
-          element: (
-            <ProtectedRoute>
-              <AllCategories />
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: "allOrders",
-          element: (
-            <ProtectedRoute>
-              {" "}
-              <Orders />{" "}
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: "wishlist",
-          element: (
-            <ProtectedRoute>
-              {" "}
-              <WishList />{" "}
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: "productDetails/:id",
-          element: (
-            <ProtectedRoute>
-              {" "}
-              <ProductDetails />{" "}
-            </ProtectedRoute>
-          ),
-        },
-        { path: "login", element: <Login /> },
-        { path: "passwordReset", element: <ForgotPassword /> },
+const protect = (element) => <ProtectedRoute>{element}</ProtectedRoute>;
 
-        { path: "verifyCode", element: <VerifyCode /> },
-        { path: "resetPassword", element: <ResetPassword /> },
-        { path: "register", element: <Register /> },
-        { path: "*", element: <Login /> },
-      ],
-    },
-  ]);
+const router = createBrowserRouter([
+  {
+    path: "",
+    element: <Layout />,
+    children: [
+      { index: true, element: <Navigate to="home" replace /> },
+      { path: "home", element: protect(<Home />) },
+      { path: "allProducts", element: protect(<AllProducts />) },
+      { path: "categories", element: protect(<AllCategories />) },
+      { path: "brands", element: protect(<Brands />) },
+      { path: "productDetails/:id", element: protect(<ProductDetails />) },
+      { path: "cart", element: protect(<Cart />) },
+      { path: "address/:cartId", element: protect(<Address />) },
+      { path: "allOrders", element: protect(<Orders />) },
+      { path: "wishlist", element: protect(<WishList />) },
+      { path: "login", element: <Login /> },
+      { path: "register", element: <Register /> },
+      { path: "passwordReset", element: <ForgotPassword /> },
+      { path: "verifyCode", element: <VerifyCode /> },
+      { path: "resetPassword", element: <ResetPassword /> },
+      { path: "*", element: <PageNotFound /> },
+    ],
+  },
+]);
+
+export default function App() {
   return (
-    <>
-      <Provider store={store}>
-        <QueryClientProvider client={queryClient}>
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <AuthContextProvider>
           <CartContextProvider>
-            <AuthContextProvider>
-              <RouterProvider router={routes}></RouterProvider>;
-            </AuthContextProvider>
+            <RouterProvider router={router} />
           </CartContextProvider>
-          <ToastContainer />
-
-        </QueryClientProvider>
-      </Provider>
-    </>
+        </AuthContextProvider>
+        <ToastContainer />
+      </QueryClientProvider>
+    </Provider>
   );
 }
-
-export default App;

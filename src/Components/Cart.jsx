@@ -1,179 +1,128 @@
-import axios from "axios";
-import React, { useEffect, useState } from "react";
-import CartProduct from "./CartProduct";
-import { toast } from "react-toastify";
-import Swal from "sweetalert2";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import Swal from "sweetalert2";
+import { api, getErrorMessage, notify } from "../api";
+import { cartContext } from "../Contexts/CartContext";
+import CartProduct from "./CartProduct";
+import Spinner from "./Spinner";
 
-import { useDispatch, useSelector } from "react-redux";
-
-
-import { getProducts } from "../Redux/productsSlice";
+const confirmDialog = Swal.mixin({
+  customClass: {
+    confirmButton: "btn btn-danger",
+    cancelButton: "btn btn-success",
+  },
+  buttonsStyling: false,
+});
 
 export default function Cart() {
+  const { setCartCount } = useContext(cartContext);
+  const [cart, setCart] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const updateTimeout = useRef();
 
-  let dispatch = useDispatch();
-  let { products } = useSelector((state) => state.products)
-  console.log(products)
+  const applyCart = useCallback(
+    (data) => {
+      setCart(data);
+      setCartCount(data?.numOfCartItems ?? 0);
+    },
+    [setCartCount]
+  );
 
   useEffect(() => {
-    dispatch(getProducts())
-  }, [])
+    async function getCart() {
+      try {
+        const { data } = await api.get("/cart");
+        applyCart(data);
+      } catch {
+        applyCart(null);
+      } finally {
+        setIsLoading(false);
+      }
+    }
 
-  const [timeOutId, setTimeOutId] = useState();
+    getCart();
+    return () => clearTimeout(updateTimeout.current);
+  }, [applyCart]);
 
-  const [cart, setCart] = useState({});
-  const [cartId, setCartId] = useState()
-  async function getLoggedInCartProduct() {
+  async function removeProductFromCart(productId) {
     try {
-      const { data } = await axios.get(
-        "https://ecommerce.routemisr.com/api/v1/cart",
-        {
-          headers: {
-            token: localStorage.getItem("token"),
-          },
-        }
-      );
-      setCartId(data.data._id);
-      setCart(data);
+      const { data } = await api.delete(`/cart/${productId}`);
+      applyCart(data);
+      notify("Product removed from your cart");
     } catch (error) {
-      console.log(error);
+      notify(getErrorMessage(error));
     }
   }
-  async function removeProductFromCart(productId) {
-    const { data } = await axios.delete(
-      "https://ecommerce.routemisr.com/api/v1/cart/" + productId,
-      {
-        headers: {
-          token: localStorage.getItem("token"),
-        },
-      }
-    );
-    toast('Product has removed', {
-      position: "top-right",
-      autoClose: 2000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: false,
-      draggable: true,
-      progress: undefined,
-      theme: "dark",
 
-    })
-    setCart(data);
+  function updateCartProductCount(productId, count) {
+    clearTimeout(updateTimeout.current);
+    updateTimeout.current = setTimeout(async () => {
+      if (count < 1) {
+        removeProductFromCart(productId);
+        return;
+      }
+      try {
+        const { data } = await api.put(`/cart/${productId}`, { count });
+        applyCart(data);
+      } catch (error) {
+        notify(getErrorMessage(error));
+      }
+    }, 800);
   }
 
-  function clearCart() {
-    const swalWithBootstrapButtons = Swal.mixin({
-      customClass: {
-        confirmButton: "btn btn-danger",
-        cancelButton: "btn btn-success"
-      },
-      buttonsStyling: false
-    });
-    swalWithBootstrapButtons.fire({
+  async function clearCart() {
+    const result = await confirmDialog.fire({
       title: "Are you sure?",
-      text: "You won't be able to revert this!",
+      text: "This will remove every product from your cart.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Yes, delete it!",
-      cancelButtonText: "No, cancel!",
-      reverseButtons: true
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        const { data } = await axios.delete(
-          "https://ecommerce.routemisr.com/api/v1/cart",
-          {
-            headers: {
-              token: localStorage.getItem("token"),
-            },
-          }
-        );
-
-        setCart(data);
-
-        swalWithBootstrapButtons.fire({
-          title: "Deleted!",
-          text: "Your cart has been deleted.",
-          icon: "success"
-        });
-      } else if (
-        /* Read more about handling dismissals below */
-        result.dismiss === Swal.DismissReason.cancel
-      ) {
-        swalWithBootstrapButtons.fire({
-          title: "Cancelled",
-          text: "Your cart is safe :)",
-          icon: "error"
-        });
-      }
+      confirmButtonText: "Yes, clear it",
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
     });
 
-  }
-  function updateCartProductCount(productId, count) {
-    clearTimeout(timeOutId);
-    setTimeOutId(
-      setTimeout(async () => {
-        if (count == 0) {
-          removeProductFromCart(productId);
-        } else {
-          const { data } = await axios.put(
-            "https://ecommerce.routemisr.com/api/v1/cart/" + productId,
-            {
-              count,
-            },
-            {
-              headers: {
-                token: localStorage.getItem("token"),
-              },
-            }
-          );
-          setCart(data);
-        }
-      }, 3000)
-    );
+    if (!result.isConfirmed) return;
+
+    try {
+      await api.delete("/cart");
+      applyCart(null);
+      confirmDialog.fire({ title: "Cleared", text: "Your cart is empty now.", icon: "success" });
+    } catch (error) {
+      notify(getErrorMessage(error));
+    }
   }
 
-  useEffect(() => {
-    getLoggedInCartProduct();
-  });
+  if (isLoading) return <Spinner />;
+
+  const products = cart?.data?.products ?? [];
+
+  if (products.length === 0) {
+    return <h2 className="alert alert-warning text-center my-5">No products in your cart</h2>;
+  }
 
   return (
-    <>
+    <div className="my-5">
+      <button onClick={clearCart} className="btn btn-outline-danger d-block ms-auto">
+        Clear Cart
+      </button>
 
+      {products.map((cartProduct) => (
+        <CartProduct
+          key={cartProduct.product._id}
+          cartProduct={cartProduct}
+          removeProductFromCart={removeProductFromCart}
+          updateCartProductCount={updateCartProductCount}
+        />
+      ))}
 
-
-
-      {cart.data?.products.length > 0 ? (
-        <div className="my-5">
-          <button
-            onClick={clearCart}
-            className="btn btn-outline-danger d-block ms-auto"
-          >
-            Clear Cart
-          </button>
-
-          {cart.data?.products.map((cartProduct, index) => {
-            return (
-              <CartProduct
-                key={index}
-                cartProduct={cartProduct}
-                removeProductFromCart={removeProductFromCart}
-                updateCartProductCount={updateCartProductCount}
-              />
-            );
-          })}
-
-          <div className="d-flex justify-content-between">
-            <Link to={'/address/' + cartId} className="btn bg-main text-white">CheckOut</Link>
-            <p>Total cart Price: {cart.data?.totalCartPrice} EGP</p>
-          </div>
-        </div>
-      ) : (
-        <h2 className="alert alert-warning text-center my-5">
-          No products in your cart
-        </h2>
-      )}
-    </>
+      <div className="d-flex justify-content-between align-items-center">
+        <Link to={`/address/${cart.data._id}`} className="btn bg-main text-white">
+          Checkout
+        </Link>
+        <p className="mb-0">
+          <span className="fw-bolder">Total:</span> {cart.data.totalCartPrice} EGP
+        </p>
+      </div>
+    </div>
   );
 }

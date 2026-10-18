@@ -1,31 +1,19 @@
-import axios from "axios";
-import React, { useEffect, useState } from "react";
-// import { Link } from "react-router-dom";
+import useCategories from "../hooks/useCategories";
 import SubCategories from "./SubCategories";
+import Spinner from "./Spinner";
 
 export default function AllCategories() {
-  const [categories, setCategories] = useState([]);
+  const { data: categories = [], isLoading } = useCategories();
 
-  async function getAllCategory() {
-    const { data } = await axios.get(
-      "https://ecommerce.routemisr.com/api/v1/categories"
-    );
-    console.log(data.data[0]._id);
-    setCategories(data.data);
-  }
+  if (isLoading) return <Spinner />;
 
-  useEffect(() => {
-    getAllCategory();
-  },[]);
   return (
     <div className="row mt-5">
-      {categories.map((category, index) => {
-        return (
-          <div className="col-md-3" key={index}>
-            <SubCategories category={category} />
-          </div>
-        );
-      })}
+      {categories.map((category) => (
+        <div className="col-md-3" key={category._id}>
+          <SubCategories category={category} />
+        </div>
+      ))}
     </div>
   );
 }

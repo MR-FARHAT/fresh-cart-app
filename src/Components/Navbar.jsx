@@ -1,25 +1,35 @@
-import React, { useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import logo from "../Assets/freshcart-logo.svg";
-import "@fortawesome/fontawesome-free";
 import { authContext } from "../Contexts/AuthContext";
 import { cartContext } from "../Contexts/CartContext";
 
+const links = [
+  { to: "/home", label: "Home" },
+  { to: "/cart", label: "Cart" },
+  { to: "/allProducts", label: "Products" },
+  { to: "/categories", label: "Categories" },
+  { to: "/brands", label: "Brands" },
+  { to: "/allOrders", label: "Orders" },
+  { to: "/wishlist", label: "Wish List" },
+];
+
 export default function Navbar() {
   const { userIsLoggedIn, setUserIsLoggedIn } = useContext(authContext);
+  const { cartCount } = useContext(cartContext);
   const navigate = useNavigate();
+
   function logOut() {
+    localStorage.removeItem("token");
     setUserIsLoggedIn(false);
-    localStorage.removeItem('token')
-    navigate('/login')
+    navigate("/login");
   }
-  const { cartCount } = useContext(cartContext)
 
   return (
-    <nav className="navbar navbar-expand-lg  min-nav">
+    <nav className="navbar navbar-expand-lg min-nav">
       <div className="container">
-        <Link className="navbar-brand" href="#">
-          <img src={logo} alt="" />
+        <Link className="navbar-brand" to="/home">
+          <img src={logo} alt="FreshCart" />
         </Link>
         <button
           className="navbar-toggler"
@@ -32,58 +42,34 @@ export default function Navbar() {
         >
           <span className="navbar-toggler-icon"></span>
         </button>
+
         <div className="collapse navbar-collapse" id="navbarSupportedContent">
           {userIsLoggedIn && (
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              <li className="nav-item">
-                <Link
-                  className="nav-link active"
-                  aria-current="page"
-                  to={"home"}
-                >
-                  Home
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to={"cart"}>
-                  Cart
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to={"allProducts"}>
-                  Products
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to={"categories"}>
-                  Categories
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to={"brands"}>
-                  Brands
-                </Link>
-              </li>
-
-              <li className="nav-item">
-                <Link className="nav-link" to={"allOrders"}>
-                  Orders
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to={"wishlist"}>
-                  Wish List
-                </Link>
-              </li>
-
+              {links.map(({ to, label }) => (
+                <li className="nav-item" key={to}>
+                  <NavLink className="nav-link" to={to}>
+                    {label}
+                  </NavLink>
+                </li>
+              ))}
             </ul>
           )}
+
           <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
             <li className="nav-item d-flex align-items-center">
-              <Link className='text-black' to={"cart"}> <i className="fa-solid fa-cart-shopping mx-1 fs-5 position-relative">
-                <span className={cartCount?.numOfCartItems === 0 || cartCount === 0 ? "disply-none opacity-0" : "position-absolute bottom-100 start-50 bg-main translate-middel w-100 rounded-circle shoppcart text-light py-1 text-center  mb-1"}>{cartCount?.numOfCartItems ? cartCount?.numOfCartItems : ""}</span>
-              </i></Link>
-              <i className="fa-brands fa-facebook"></i>
+              {userIsLoggedIn && (
+                <Link className="text-black" to="/cart" aria-label="Cart">
+                  <i className="fa-solid fa-cart-shopping mx-1 fs-5 position-relative">
+                    {cartCount > 0 && (
+                      <span className="position-absolute bottom-100 start-50 bg-main w-100 rounded-circle shoppcart text-light py-1 text-center mb-1">
+                        {cartCount}
+                      </span>
+                    )}
+                  </i>
+                </Link>
+              )}
+              <i className="fab mx-2 fa-facebook"></i>
               <i className="fab mx-2 fa-twitter"></i>
               <i className="fab mx-2 fa-instagram"></i>
               <i className="fab mx-2 fa-youtube"></i>
@@ -92,19 +78,21 @@ export default function Navbar() {
 
             {userIsLoggedIn ? (
               <li className="nav-item">
-                <span onClick={logOut} className="nav-link cursor-pointer ">Logout</span>
+                <button onClick={logOut} className="nav-link btn btn-link">
+                  Logout
+                </button>
               </li>
             ) : (
               <>
                 <li className="nav-item">
-                  <Link className="nav-link" to={"login"}>
+                  <NavLink className="nav-link" to="/login">
                     Login
-                  </Link>
+                  </NavLink>
                 </li>
                 <li className="nav-item">
-                  <Link className="nav-link" to={"register"}>
+                  <NavLink className="nav-link" to="/register">
                     Register
-                  </Link>
+                  </NavLink>
                 </li>
               </>
             )}

@@ -1,33 +1,52 @@
-import { createContext, useEffect, useState } from "react";
-import axios from "axios";
-export const cartContext = createContext()
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { api, getErrorMessage, notify } from "../api";
+import { authContext } from "./AuthContext";
+
+export const cartContext = createContext();
+
 export default function CartContextProvider({ children }) {
-    const [cartCount, setCartcount] = useState({})
+  const { userIsLoggedIn } = useContext(authContext);
+  const [cartCount, setCartCount] = useState(0);
 
-    async function getLogedCart() {
-        try {
-
-            const { data } = await axios.get(`https://ecommerce.routemisr.com/api/v1/cart`, {
-                headers: {
-                    token: localStorage.getItem('token')
-                }
-            })
-
-            setCartcount(data)
-            console.log(data.data)
-
-        } catch (error) {
-
-            console.log(error)
-        }
+  const refreshCartCount = useCallback(async () => {
+    try {
+      const { data } = await api.get("/cart");
+      setCartCount(data.numOfCartItems ?? 0);
+    } catch {
+      setCartCount(0);
     }
-    useEffect(() => {
-        getLogedCart()
-    }, [])
-    return <cartContext.Provider value={{ cartCount, setCartcount }}>
-        {children}
+  }, []);
 
+  useEffect(() => {
+    if (userIsLoggedIn) {
+      refreshCartCount();
+    } else {
+      setCartCount(0);
+    }
+  }, [userIsLoggedIn, refreshCartCount]);
+
+  async function addToCart(productId) {
+    try {
+      const { data } = await api.post("/cart", { productId });
+      setCartCount(data.numOfCartItems ?? 0);
+      notify(data.message);
+    } catch (error) {
+      notify(getErrorMessage(error, "Couldn't add the product to your cart."));
+    }
+  }
+
+  async function addToWishList(productId) {
+    try {
+      const { data } = await api.post("/wishlist", { productId });
+      notify(`❤️ ${data.message}`, "light");
+    } catch (error) {
+      notify(getErrorMessage(error, "Couldn't add the product to your wish list."));
+    }
+  }
+
+  return (
+    <cartContext.Provider value={{ cartCount, setCartCount, refreshCartCount, addToCart, addToWishList }}>
+      {children}
     </cartContext.Provider>
+  );
 }
-
-

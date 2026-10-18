@@ -1,41 +1,27 @@
-import axios from "axios";
-import React from "react";
-import Products from "./Products";
 import { useQuery } from "react-query";
+import { api } from "../api";
+import Products from "./Products";
+import Spinner from "./Spinner";
 
+function fetchProducts() {
+  return api.get("/products").then(({ data }) => data.data);
+}
 
 export default function AllProducts() {
-
-
-  function getAllProducts() {
-    return axios.get("https://ecommerce.routemisr.com/api/v1/products"); //Must use return 
-
-  }
-  //this steps to caching the data 
-  const { data } = useQuery('products', getAllProducts, {
+  const { data: products = [], isLoading, isError } = useQuery("products", fetchProducts, {
     cacheTime: 20000,
-    // refetchInterval:10000, //data will refetch atfer x milliseconds
-    // staleTime:5000 //Data will be fresh for x milliseconds
-  }) // tan Stack or react query, 
+  });
 
-  console.log(data)
+  if (isLoading) return <Spinner />;
+  if (isError) return <p className="alert alert-danger mt-4">Couldn't load products. Please try again.</p>;
 
-  // in the browser we can FORCE clear the cache by "ctrl shift R"
   return (
-    <>
-
-
-
-
-      <div className="row">
-        {data?.data.data.map((product) => {
-          return (
-            <div key={product.id} className="col-md-3">
-              <Products product={product} />
-            </div>
-          );
-        })}
-      </div>
-    </>
+    <div className="row">
+      {products.map((product) => (
+        <div key={product.id} className="col-md-3">
+          <Products product={product} />
+        </div>
+      ))}
+    </div>
   );
 }
