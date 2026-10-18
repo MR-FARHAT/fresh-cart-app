@@ -1,6 +1,6 @@
 # FreshCart
 
-FreshCart is the first e-commerce app I built, back in 2024 while I was studying the Front-End Development diploma at **Route Academy**. It started as the diploma's final project and I kept improving it afterwards.
+FreshCart is the first e-commerce app I built, back in 2024 while I was studying the Front-End Development diploma at **Route Academy**. I've kept improving it since.
 
 **Live demo:** https://mr-farhat.github.io/fresh-cart-app/
 
