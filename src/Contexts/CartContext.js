@@ -5,7 +5,7 @@ import { authContext } from "./AuthContext";
 export const cartContext = createContext();
 
 export default function CartContextProvider({ children }) {
-  const { userIsLoggedIn } = useContext(authContext);
+  const { userIsLoggedIn, isDemo } = useContext(authContext);
   const [cartCount, setCartCount] = useState(0);
 
   const refreshCartCount = useCallback(async () => {
@@ -18,14 +18,22 @@ export default function CartContextProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (userIsLoggedIn) {
+    if (userIsLoggedIn && !isDemo) {
       refreshCartCount();
     } else {
       setCartCount(0);
     }
-  }, [userIsLoggedIn, refreshCartCount]);
+  }, [userIsLoggedIn, isDemo, refreshCartCount]);
+
+  function demoBlocked() {
+    if (isDemo) {
+      notify("Demo mode: create a free account to use the cart and wish list.", "light");
+    }
+    return isDemo;
+  }
 
   async function addToCart(productId) {
+    if (demoBlocked()) return;
     try {
       const { data } = await api.post("/cart", { productId });
       setCartCount(data.numOfCartItems ?? 0);
@@ -36,6 +44,7 @@ export default function CartContextProvider({ children }) {
   }
 
   async function addToWishList(productId) {
+    if (demoBlocked()) return;
     try {
       const { data } = await api.post("/wishlist", { productId });
       notify(`❤️ ${data.message}`, "light");

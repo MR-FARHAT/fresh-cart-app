@@ -1,7 +1,5 @@
 import { useState } from "react";
-
-const demoEmail = process.env.REACT_APP_DEMO_EMAIL;
-const demoPassword = process.env.REACT_APP_DEMO_PASSWORD;
+import { DEMO_ACCOUNT } from "../Contexts/AuthContext";
 
 function CopyRow({ label, value }) {
   const [copied, setCopied] = useState(false);
@@ -30,16 +28,14 @@ function CopyRow({ label, value }) {
 }
 
 export default function DemoAccount() {
-  if (!demoEmail || !demoPassword) return null;
-
   return (
     <div className="alert alert-success mt-3 mb-2 p-2">
       <p className="fw-bold small mb-2">
         <i className="fa-solid fa-user-check me-2"></i>
         Just looking around? Copy the demo account
       </p>
-      <CopyRow label="Email" value={demoEmail} />
-      <CopyRow label="Password" value={demoPassword} />
+      <CopyRow label="Email" value={DEMO_ACCOUNT.email} />
+      <CopyRow label="Password" value={DEMO_ACCOUNT.password} />
     </div>
   );
 }

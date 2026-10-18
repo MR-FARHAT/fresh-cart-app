@@ -3,7 +3,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api, getErrorMessage } from "../api";
-import { authContext } from "../Contexts/AuthContext";
+import { authContext, isDemoLogin } from "../Contexts/AuthContext";
 import DemoAccount from "./DemoAccount";
 
 const validationSchema = Yup.object({
@@ -12,7 +12,7 @@ const validationSchema = Yup.object({
 });
 
 export default function Login() {
-  const { setUserIsLoggedIn } = useContext(authContext);
+  const { setUserIsLoggedIn, startDemo } = useContext(authContext);
   const [errorMsg, setErrorMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -23,6 +23,13 @@ export default function Login() {
     validationSchema,
     onSubmit: async (formValues) => {
       setErrorMsg("");
+
+      if (isDemoLogin(formValues)) {
+        startDemo();
+        navigate(location.state?.from || "/home", { replace: true });
+        return;
+      }
+
       setIsLoading(true);
       try {
         const { data } = await api.post("/auth/signin", formValues);

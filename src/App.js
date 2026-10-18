@@ -26,7 +26,7 @@ import PageNotFound from "./Components/PageNotFound";
 
 const queryClient = new QueryClient();
 
-const protect = (element) => <ProtectedRoute>{element}</ProtectedRoute>;
+const protect = (element, needsAccount) => <ProtectedRoute needsAccount={needsAccount}>{element}</ProtectedRoute>;
 
 const router = createBrowserRouter(
   [
@@ -40,10 +40,10 @@ const router = createBrowserRouter(
         { path: "categories", element: protect(<AllCategories />) },
         { path: "brands", element: protect(<Brands />) },
         { path: "productDetails/:id", element: protect(<ProductDetails />) },
-        { path: "cart", element: protect(<Cart />) },
-        { path: "address/:cartId", element: protect(<Address />) },
-        { path: "allOrders", element: protect(<Orders />) },
-        { path: "wishlist", element: protect(<WishList />) },
+        { path: "cart", element: protect(<Cart />, "cart") },
+        { path: "address/:cartId", element: protect(<Address />, "checkout") },
+        { path: "allOrders", element: protect(<Orders />, "order history") },
+        { path: "wishlist", element: protect(<WishList />, "wish list") },
         { path: "login", element: <Login /> },
         { path: "register", element: <Register /> },
         { path: "passwordReset", element: <ForgotPassword /> },
